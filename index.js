@@ -193,7 +193,7 @@ function handleGreeting(msg, session) {
 }
 
 function getMainMenuMessage() {
-  return `🍕 Welcome to Tony's Pizza Bot! 🍕
+  return `🍕 Welcome to Tinoe's Pizza Bot! 🍕
 
 What would you like to do?
 
@@ -418,8 +418,8 @@ setInterval(() => {
 }, 30 * 60 * 1000);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🍕 PizzaBot server running on port ${PORT}`);
-  console.log(`Webhook endpoint: http://localhost:${PORT}/webhook`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`Webhook endpoint: https://your-render-service-name.onrender.com/webhook`);
+  console.log(`Health check: https://your-render-service-name.onrender.com/health`);
 });
