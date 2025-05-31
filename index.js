@@ -78,6 +78,32 @@ app.post('/webhook', (req, res) => {
   }
 });
 
+app.get('/webhook', (req, res) => {
+  // WhatsApp webhook verification
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  console.log('Webhook verification request:', { mode, token, challenge });
+
+  // Check if a token and mode were sent
+  if (mode && token) {
+    // Check the mode and token sent are correct
+    if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+      // Respond with 200 OK and challenge token from the request
+      console.log('Webhook verified successfully!');
+      res.status(200).send(challenge);
+    } else {
+      // Responds with '403 Forbidden' if verify tokens do not match
+      console.log('Webhook verification failed - invalid token');
+      res.sendStatus(403);
+    }
+  } else {
+    // Return a simple response for GET requests without verification params
+    res.status(200).send('Webhook is running');
+  }
+});
+
 async function processMessageAsync(msg, phone) {
   try {
     console.log(`Processing message from ${phone}: "${msg}"`);
