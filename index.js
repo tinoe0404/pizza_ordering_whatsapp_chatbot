@@ -108,6 +108,9 @@ async function processMessageAsync(msg, phone) {
   try {
     console.log(`Processing message from ${phone}: "${msg}"`);
     
+    // Ensure phone has whatsapp: prefix for sending
+    const whatsappPhone = phone.startsWith('whatsapp:') ? phone : `whatsapp:${phone}`;
+    
     // Initialize or get user session
     if (!userSessions[phone]) {
       console.log('Creating new session for:', phone);
@@ -128,7 +131,7 @@ async function processMessageAsync(msg, phone) {
     const message = await client.messages.create({
       body: response,
       from: 'whatsapp:+14155238886',
-      to: phone
+      to: whatsappPhone
     });
     
     console.log('Message sent successfully:', message.sid);
@@ -139,10 +142,11 @@ async function processMessageAsync(msg, phone) {
     
     // Send error message to user
     try {
+      const whatsappPhone = phone.startsWith('whatsapp:') ? phone : `whatsapp:${phone}`;
       await client.messages.create({
         body: "Sorry, something went wrong. Please try again.",
         from: 'whatsapp:+14155238886',
-        to: phone
+        to: whatsappPhone
       });
     } catch (sendError) {
       console.error('Failed to send error message:', sendError);
@@ -151,6 +155,11 @@ async function processMessageAsync(msg, phone) {
 }
 
 function handleUserMessage(message, session, phone) {
+  // Add input validation
+  if (!message || typeof message !== 'string') {
+    return "Sorry, I didn't understand that. Please try again or type 'menu' for options.";
+  }
+  
   const msg = message.toLowerCase().trim();
   console.log(`Handling message: "${msg}" in step: ${session.step}`);
   
@@ -178,6 +187,11 @@ function handleUserMessage(message, session, phone) {
     
     case 'customer_info':
       return handleCustomerInfo(msg, session);
+    
+    case 'completed':
+      // After order completion, any message restarts the flow
+      session.step = 'main_menu';
+      return "Thanks for your previous order! " + getMainMenuMessage();
     
     default:
       console.log('Unknown step, resetting to main menu');
@@ -224,7 +238,7 @@ function handleMainMenu(msg, session) {
     
     case '4':
     case 'contact':
-      return "📞 Contact us at: (555) 123-PIZZA\n📧 Email: orders@tonyspizza.com\n\nReply 'menu' to return to main menu.";
+      return "📞 Contact us at: (0780885780) 123-PIZZA\n📧 Email: orders@tinoepizza.com\n\nReply 'menu' to return to main menu.";
     
     default:
       return "Please reply with 1, 2, 3, or 4 to make your selection.\n\nOr type 'menu' to see options again.";
@@ -360,21 +374,22 @@ function handleCustomerInfo(msg, session) {
 💰 Total: $${total.toFixed(2)}
 
 ⏰ Estimated delivery: 25-35 minutes
-📞 Questions? Call (555) 123-PIZZA
+📞 Questions? Call (0780885780) 123-PIZZA
 
-Thanks for choosing Tony's Pizza! 🍕
+Thanks for choosing Tinoe's Pizza! 🍕
 
 Reply 'menu' to start a new order!`;
 
-  // Reset session but don't delete it completely
-  session.step = 'main_menu';
+  // Better session management - mark as completed
+  session.step = 'completed';
+  session.lastOrderTime = new Date();
   session.order = {};
   
   return orderSummary;
 }
 
 function getFullMenuMessage() {
-  let message = "🍕 TONY'S PIZZA MENU 🍕\n\n";
+  let message = "🍕 TINOE'S PIZZA MENU 🍕\n\n";
   
   message += "📏 SIZES:\n";
   PIZZA_MENU.sizes.forEach(size => {
